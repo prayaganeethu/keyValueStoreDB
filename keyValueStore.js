@@ -12,7 +12,7 @@ exports.keyValStore = function (dbInput) {
   return null
 }
 
-let dbOp = factory(listAllObj, insertObj, deleteObj)
+let dbOp = factory(listAllObj, insertObj, deleteObj, showValue)
 
 function factory (...parsers) {
   return function (In) {
@@ -77,6 +77,22 @@ function deleteObj (dbInput) {
     }
     fs.writeFile('db.json', JSON.stringify(json, null, 4))
     return ['Data deleted', dbInput]
+  }
+  return null
+}
+
+function showValue (dbInput) {
+  if (dbInput.split(' ')[0] === 'show') {
+    let res = ''
+    dbInput = delSpace(dbInput.slice(4))
+    let key = dbInput.split(' ')[0]
+    // console.log('key', key)
+    dbInput = delSpace(dbInput.slice(key.length))
+    let json = require('./db.json')
+    for (let ob of json) {
+      if (Object.keys(ob)[0] === key) res += key + ' : ' + ob[Object.keys(ob)[0]]
+    }
+    return [res, dbInput]
   }
   return null
 }
