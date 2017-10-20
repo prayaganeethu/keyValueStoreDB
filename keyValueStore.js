@@ -12,7 +12,7 @@ exports.keyValStore = function (dbInput) {
   return null
 }
 
-let dbOp = factory(insertObj, deleteObj)
+let dbOp = factory(listAllObj, insertObj, deleteObj)
 
 function factory (...parsers) {
   return function (In) {
@@ -22,6 +22,17 @@ function factory (...parsers) {
     }
     return null
   }
+}
+
+function listAllObj (dbInput) {
+  if (dbInput.split(' ')[0] === 'listAll') {
+    dbInput = delSpace(dbInput.slice(7))
+    let json = require('./db.json')
+    // let _ = require('lodash')
+    for (let ob of json) console.log(Object.keys(ob)[0], ':', ob[Object.keys(ob)[0]])
+    return ['********', dbInput]
+  }
+  return null
 }
 
 function insertObj (dbInput) {
