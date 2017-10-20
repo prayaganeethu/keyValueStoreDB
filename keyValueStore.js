@@ -12,7 +12,7 @@ exports.keyValStore = function (dbInput) {
   return null
 }
 
-let dbOp = factory(listAllObj, insertObj, deleteObj, showValue)
+let dbOp = factory(listAllObj, insertObj, updateObj, deleteObj, showValue)
 
 function factory (...parsers) {
   return function (In) {
@@ -52,11 +52,34 @@ function insertObj (dbInput) {
   return null
 }
 
+function updateObj (dbInput) {
+  if (dbInput.split(' ')[0] === 'update') {
+    dbInput = delSpace(dbInput.slice(6))
+    let key = dbInput.split(' ')[0]
+    dbInput = delSpace(dbInput.slice(key.length))
+    let value = dbInput.split(' ')[0]
+    dbInput = delSpace(dbInput.slice(value.length))
+    let json = require('./db.json'), flag = 0
+    for (let ob of json) {
+      if (Object.keys(ob)[0] === key) {
+        ob[key] = value
+        flag = 1
+      }
+    }
+    if (flag === 1) {
+      fs.writeFile('db.json', JSON.stringify(json, null, 4))
+      return ['Value updated', dbInput]
+    }
+    return ['No such key found', dbInput]
+  }
+  return null
+}
+
 function deleteObj (dbInput) {
   if (dbInput.slice(0, 6) === 'delete') {
     dbInput = delSpace(dbInput.slice(6))
     let dbArr = dbInput.split(' '), key = dbArr[0]
-    console.log('key', key)
+    // console.log('key', key)
     dbInput = delSpace(dbInput.slice(key.length))
     let json = require('./db.json'), count = 0, flag = 0
     for (let ob of json) {
@@ -71,7 +94,7 @@ function deleteObj (dbInput) {
       }
       count++
     }
-    if (flag === 0) return null  // console.log(json)
+    if (flag === 0) return ['No such key found', dbInput]  // console.log(json)
     for (let i = 0; i < json.length; i++) {
       if (json[i] == null) json.splice(i, 1)
     }
