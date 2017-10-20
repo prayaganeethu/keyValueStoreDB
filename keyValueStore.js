@@ -1,10 +1,4 @@
 let fs = require('fs')
-let dbInput = ''
-
-fs.appendFile('db.json', dbInput, (err) => {
-  if (err) throw err
-  else console.log('GeekDB updated!')
-})
 
 exports.keyValStore = function (dbInput) {
   if (dbInput) {
@@ -18,7 +12,7 @@ exports.keyValStore = function (dbInput) {
   return null
 }
 
-let dbOp = factory(insertObj)
+let dbOp = factory(insertObj, deleteObj)
 
 function factory (...parsers) {
   return function (In) {
@@ -33,21 +27,45 @@ function factory (...parsers) {
 function insertObj (dbInput) {
   if (dbInput.slice(0, 6) === 'insert') {
     dbInput = delSpace(dbInput.slice(6))
-    let dbObj = {}
-    let dbArr = dbInput.split(' ')
-    let key = dbArr[0]
+    let dbObj = {}, dbArr = dbInput.split(' '), key = dbArr[0]
     dbInput = delSpace(dbInput.slice(key.length))
     dbArr = dbInput.split(' ')
     let value = dbArr[0]
     dbInput = delSpace(dbInput.slice(value.length))
     dbObj[key] = value
-    fs.appendFile('db.json', JSON.stringify(dbObj, null, 4), (err) => {
-      if (err) throw err
-    })
-    fs.appendFile('db.json', '\n', (err) => {
-      if (err) throw err
-    })
+    let json = require('./db.json')
+    json.push(dbObj)
+    fs.writeFile('db.json', JSON.stringify(json, null, 4))
     return ['Data inserted', dbInput]
+  }
+  return null
+}
+
+function deleteObj (dbInput) {
+  if (dbInput.slice(0, 6) === 'delete') {
+    dbInput = delSpace(dbInput.slice(6))
+    let dbArr = dbInput.split(' '), key = dbArr[0]
+    console.log('key', key)
+    dbInput = delSpace(dbInput.slice(key.length))
+    let json = require('./db.json'), count = 0, flag = 0
+    for (let ob of json) {
+      if (ob === null) {
+        count++
+        continue
+      }
+      if (Object.keys(ob)[0] === key) {
+        delete json[count]
+        flag = 1
+        break
+      }
+      count++
+    }
+    if (flag === 0) return null  // console.log(json)
+    for (let i = 0; i < json.length; i++) {
+      if (json[i] == null) json.splice(i, 1)
+    }
+    fs.writeFile('db.json', JSON.stringify(json, null, 4))
+    return ['Data deleted', dbInput]
   }
   return null
 }
