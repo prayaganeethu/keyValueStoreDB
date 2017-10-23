@@ -12,7 +12,7 @@ delete [key]
 listAll
 
 **Show a specific key value**
-show [key]
+show [key1].[key2].~~.[keyN]
 
 **Update a key value**
 update [key] [new-value]
