@@ -15,4 +15,4 @@ listAll
 show [key1].[key2].~~.[keyN]
 
 **Update a key value**
-update [key] [new-value]
+update [key1].[key2].~~.[keyN] [new-value]

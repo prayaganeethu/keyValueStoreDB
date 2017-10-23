@@ -51,7 +51,6 @@ function insertObj (dbInput) {
     dbInput = delSpace(dbInput.slice(6))
     let dbObj = {}, dbArr = dbInput.split(' '), key = dbArr[0]
     dbInput = delSpace(dbInput.slice(key.length))
-    // dbArr = dbInput.split(' ')
     let value = valueParsers(dbInput)
     dbInput = delSpace(value[1])
     dbObj[key] = value[0]
@@ -67,7 +66,6 @@ function insertObj (dbInput) {
 }
 
 function updateObj (dbInput) {
-  // console.log('update')
   if (dbInput.split(' ')[0] === 'update') {
     dbInput = delSpace(dbInput.slice(6))
     let key = dbInput.split(' ')[0]
@@ -75,10 +73,23 @@ function updateObj (dbInput) {
     let value = valueParsers(dbInput.split(' ')[0])
     dbInput = delSpace(dbInput.slice(dbInput.split(' ')[0].length))
     let json = require('./db.json'), flag = 0
-    for (let ob of json) {
-      if (Object.keys(ob)[0] === key) {
-        ob[key] = value
-        flag = 1
+    if (!/./.test(key)) {
+      for (let ob of json) {
+        if (Object.keys(ob)[0] === key) {
+          ob[key] = value[0]
+          flag = 1
+        }
+      }
+    }
+    else {
+      let keyArr = key.split('.'), obj = '', i
+      key = key.slice(keyArr[0].length + 1)
+      for (let ob of json) {
+        if (Object.keys(ob)[0] === keyArr[0]) {
+          for (i = 0; i < keyArr.length - 1; i++) ob = ob[keyArr[i]]
+          ob[keyArr[i]] = value[0]
+          flag = 1
+        }
       }
     }
     if (flag === 1) {
@@ -136,7 +147,6 @@ function showValue (dbInput) {
       for (let ob of json) {
         if (Object.keys(ob)[0] === keyArr[0]) {
           obj = ob
-          console.log('object', obj)
         }
       }
       for (let i = 0; i < keyArr.length; i++) obj = obj[keyArr[i]]
@@ -153,11 +163,9 @@ function delSpace (dbInput) {
 }
 
 function parseNum (value) {
-  // console.log('hola')
   let match = /^[-+]?[0-9]+(.[0-9]+([eE][-+]?[0-9]+)?)?/.exec(value), numb = '', i
   if (match == null || match.index !== 0) return null
   for (i = match.index; /[-+0-9.eE]/.test(value[i]) && value[i] !== undefined; i++) numb += value[i].toString()
-  console.log([parseFloat(numb), value.slice(i)])
   return [parseFloat(numb), value.slice(i)]
 }
 
@@ -173,25 +181,20 @@ function parseArray (value) {
     value = (parseComma(val[1]) != null) ? parseComma(val[1]) : val[1]
     value = delSpace(value)
   }
-  console.log([arr, value.slice(1)])
   return [arr, value.slice(1)]
 }
 
 function parseObject (value) {
-  console.log(value)
   if (value[0] !== '{') return null
   let obj = {}, strng, val, val1, val2
   value = value.slice(1)
   value = delSpace(value)
   while (value[0] !== '}') {
     val1 = parseString(delSpace(value))
-    console.log('val1', val1)
     if (val1 === null) return null
     strng = val1[0]
     value = (parseColon(val1[1]) != null) ? parseColon(val1[1]) : val1[1]
-    console.log('value', value)
     val2 = valueParsers(delSpace(value))
-    console.log('val2', val2)
     if (val2 == null) return null
     val = val2[0]
     obj[strng] = val
