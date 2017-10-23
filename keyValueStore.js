@@ -37,11 +37,16 @@ function factoryParsers (...parsers) {
 }
 
 function listAllObj (dbInput) {
+  let count = 0, msg = ''
   if (dbInput.split(' ')[0] === 'listAll') {
     dbInput = delSpace(dbInput.slice(7))
     let json = require('./db.json')
-    for (let ob of json) console.log(Object.keys(ob)[0], ':', ob[Object.keys(ob)[0]])
-    return ['********', dbInput]
+    for (let ob of json) {
+      console.log(Object.keys(ob)[0], ':', ob[Object.keys(ob)[0]])
+      count++
+    }
+    msg += count + ' Items'
+    return [msg, dbInput]
   }
   return null
 }
@@ -82,7 +87,7 @@ function updateObj (dbInput) {
       }
     }
     else {
-      let keyArr = key.split('.'), obj = '', i
+      let keyArr = key.split('.'), i
       key = key.slice(keyArr[0].length + 1)
       for (let ob of json) {
         if (Object.keys(ob)[0] === keyArr[0]) {
@@ -107,21 +112,40 @@ function deleteObj (dbInput) {
     let dbArr = dbInput.split(' '), key = dbArr[0]
     dbInput = delSpace(dbInput.slice(key.length))
     let json = require('./db.json'), count = 0, flag = 0
-    for (let ob of json) {
-      if (ob === null) {
+    if (!(/./.test(key))) {
+      for (let ob of json) {
+        if (ob === null) {
+          count++
+          continue
+        }
+        if (Object.keys(ob)[0] === key) {
+          delete json[count]
+          flag = 1
+          break
+        }
         count++
-        continue
       }
-      if (Object.keys(ob)[0] === key) {
-        delete json[count]
-        flag = 1
-        break
+    }
+    else {
+      let keyArr = key.split('.'), count = 0
+      key = key.slice(keyArr[0].length + 1)
+      for (let ob of json) {
+        if (Object.keys(ob)[0] === keyArr[0]) {
+          for (let i = 0; i < keyArr.length; i++) {
+            if (i === keyArr.length - 1) {
+              delete ob[keyArr[i]]
+              flag = 1
+              break
+            }
+            ob = ob[keyArr[i]]
+          }
+        }
+        count++
       }
-      count++
     }
     if (flag === 0) return ['No such key found', dbInput]
     for (let i = 0; i < json.length; i++) {
-      if (json[i] == null) json.splice(i, 1)
+      if (Object.keys(json[i]).length === 0) json.splice(i, 1)
     }
     fs.writeFile('db.json', JSON.stringify(json, null, 4))
     return ['Data deleted', dbInput]
