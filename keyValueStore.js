@@ -39,6 +39,7 @@ function factoryParsers (...parsers) {
 function listAllObj (dbInput) {
   let count = 0, msg = ''
   if (dbInput.split(' ')[0] === 'listAll') {
+    console.log('listAll')
     dbInput = delSpace(dbInput.slice(7))
     let json = require('./db.json')
     for (let ob of json) {
@@ -52,26 +53,48 @@ function listAllObj (dbInput) {
 }
 
 function insertObj (dbInput) {
+  let flag = 0
   if (dbInput.split(' ')[0] === 'insert') {
+    console.log('insert', dbInput)
+    let json = []
     dbInput = delSpace(dbInput.slice(6))
     let dbObj = {}, dbArr = dbInput.split(' '), key = dbArr[0]
     dbInput = delSpace(dbInput.slice(key.length))
     let value = valueParsers(dbInput)
     dbInput = delSpace(value[1])
     dbObj[key] = value[0]
-    let json = require('./db.json')
-    json.push(dbObj)
-    json = JSON.stringify(json, null, 4)
-    fs.writeFile('db.json', json, function (err) {
-      if (err) return err
-    })
-    return ['Data inserted', dbInput]
+    if (!fs.existsSync('./db.json')) {
+      fs.open('./db.json', 'w+', (err, fd) => {
+        if (err) throw err
+        else {
+          fs.writeFile('./test.json', JSON.stringify(json, null, 4), function (err) {
+            if (err) throw err
+            json = require('./db.json')
+          })
+        }
+      })
+    }
+    else {
+      json = require('./db.json')
+      for (let ob of json) {
+        if (Object.keys(ob)[0] === key) {
+          flag = 1
+        }
+      }
+    }
+    if (flag === 0) {
+      json.push(dbObj)
+      fs.writeFile('db.json', JSON.stringify(json, null, 4))
+      return ['Data inserted', dbInput]
+    }
+    else return ['Key already exists', dbInput]
   }
   return null
 }
 
 function updateObj (dbInput) {
   if (dbInput.split(' ')[0] === 'update') {
+    console.log('update')
     dbInput = delSpace(dbInput.slice(6))
     let key = dbInput.split(' ')[0]
     dbInput = delSpace(dbInput.slice(key.length))
@@ -90,13 +113,21 @@ function updateObj (dbInput) {
       let keyArr = key.split('.'), i
       key = key.slice(keyArr[0].length + 1)
       for (let ob of json) {
-        if (Object.keys(ob)[0] === keyArr[0]) {
+        if ((Object.keys(ob).length === keyArr.length - 1) && (Object.keys(ob)[0] === keyArr[0])) {
+          console.log('HOLA', Object.keys(ob).length, keyArr.length)
+          for (i = 0; i < Object.keys(ob).length - 1; i++) ob = ob[Object.keys(ob)[i]]
+          console.log('ob', ob)
+          ob[keyArr[keyArr.length - 2]][keyArr[keyArr.length - 1]] = value[0]
+          flag = 1
+        }
+        else if ((Object.keys(ob).length === keyArr.length) && (Object.keys(ob)[0] === keyArr[0])) {
           for (i = 0; i < keyArr.length - 1; i++) ob = ob[keyArr[i]]
           ob[keyArr[i]] = value[0]
           flag = 1
         }
       }
     }
+
     if (flag === 1) {
       fs.writeFile('db.json', JSON.stringify(json, null, 4))
       return ['Value updated', dbInput]
@@ -108,6 +139,7 @@ function updateObj (dbInput) {
 
 function deleteObj (dbInput) {
   if (dbInput.split(' ')[0] === 'delete') {
+    console.log('delete')
     dbInput = delSpace(dbInput.slice(6))
     let dbArr = dbInput.split(' '), key = dbArr[0]
     dbInput = delSpace(dbInput.slice(key.length))
@@ -155,6 +187,7 @@ function deleteObj (dbInput) {
 
 function showValue (dbInput) {
   if (dbInput.split(' ')[0] === 'show') {
+    console.log('show')
     let res = ''
     dbInput = delSpace(dbInput.slice(4))
     let key = dbInput.split(' ')[0]

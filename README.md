@@ -1,4 +1,4 @@
-# keyValueStoreDB
+# GeekDB
 
 ## Commands:
 
