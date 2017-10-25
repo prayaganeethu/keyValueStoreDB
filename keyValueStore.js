@@ -114,50 +114,63 @@ function updateOldNestedKey (ob, keyArr, res) {
 }
 
 function deleteObj (dbInput) {
-  if (dbInput.split(' ')[0] === 'delete') {
-    console.log('delete')
-    dbInput = delSpace(dbInput.slice(6))
-    let res = getKeyValue(dbInput)
-    let json = require('./db.json'), count = 0, flag = 0
-    if (!(/./.test(res[0]))) {
-      for (let ob of json) {
-        if (ob === null) {
-          count++
-          continue
-        }
-        if (Object.keys(ob)[0] === res[0]) {
-          delete json[count]
+  return (dbInput.split(' ')[0] === 'delete') ? deleteData(dbInput) : null
+}
+
+function deleteData (dbInput) {
+  dbInput = delSpace(dbInput.slice(6))
+  let res = getKeyValue(dbInput)
+  return (deleteSimpleOrNestedKey(res)) ? ['Data deleted', res[2]] : ['No such key found', res[2]]
+}
+
+function deleteSimpleOrNestedKey (res) {
+  let json = require('./db.json')
+  let flag = (!(/./.test(res[0]))) ? deleteSimpleKey(json, res) : deleteNestedKey(json, res)
+  return flag
+}
+
+function deleteSimpleKey (json, res) {
+  let count = 0, flag = 0
+  for (let ob of json) {
+    if (ob === null) {
+      count++
+      continue
+    }
+    if (Object.keys(ob)[0] === res[0]) {
+      delete json[count]
+      flag = 1
+      json = purgeJson(json)
+      writeData(json)
+      break
+    }
+    count++
+  }
+  return flag
+}
+
+function deleteNestedKey (json, res) {
+  let keyArr = res[0].split('.'), flag = 0
+  // let key = res[0].slice(keyArr[0].length + 1)
+  for (let ob of json) {
+    if (Object.keys(ob)[0] === keyArr[0]) {
+      for (let i = 0; i < keyArr.length; i++) {
+        if (i === keyArr.length - 1) {
+          delete ob[keyArr[i]]
           flag = 1
+          json = purgeJson(json)
+          writeData(json)
           break
         }
-        count++
+        ob = ob[keyArr[i]]
       }
     }
-    else {
-      let keyArr = res[0].split('.'), count = 0
-      key = res[0].slice(keyArr[0].length + 1)
-      for (let ob of json) {
-        if (Object.keys(ob)[0] === keyArr[0]) {
-          for (let i = 0; i < keyArr.length; i++) {
-            if (i === keyArr.length - 1) {
-              delete ob[keyArr[i]]
-              flag = 1
-              break
-            }
-            ob = ob[keyArr[i]]
-          }
-        }
-        count++
-      }
-    }
-    if (flag === 0) return ['No such key found', res[2]]
-    for (let i = 0; i < json.length; i++) {
-      if (Object.keys(json[i]).length === 0) json.splice(i, 1)
-    }
-    fs.writeFile('db.json', JSON.stringify(json, null, 4))
-    return ['Data deleted', res[2]]
   }
-  return null
+  return flag
+}
+
+function purgeJson (json) {
+  for (let i = 0; i < json.length; i++) if (Object.keys(json[i]).length === 0) json.splice(i, 1)
+  return json
 }
 
 function showValue (dbInput) {
