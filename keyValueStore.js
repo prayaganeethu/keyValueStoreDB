@@ -13,7 +13,7 @@ exports.keyValStore = function (dbInput) {
   return null
 }
 
-let dbOp = factory(ifList, ifInsert, ifUpdate, deleteObj, showValue)
+let dbOp = factory(ifList, ifInsert, ifUpdate, ifDelete, ifShowSpecificKey)
 
 function factory (...crud) {
   return function (In) {
@@ -113,7 +113,7 @@ function updateOldNestedKey (ob, keyArr, res) {
   return 1
 }
 
-function deleteObj (dbInput) {
+function ifDelete (dbInput) {
   return (dbInput.split(' ')[0] === 'delete') ? deleteData(dbInput) : null
 }
 
@@ -173,30 +173,43 @@ function purgeJson (json) {
   return json
 }
 
+function ifShowSpecificKey (dbInput) {
+  return (dbInput.split(' ')[0] === 'show') ? showValue(dbInput) : null
+}
+
 function showValue (dbInput) {
-  if (dbInput.split(' ')[0] === 'show') {
-    dbInput = delSpace(dbInput.slice(4))
-    let res = getKeyValue(dbInput)
-    let json = require('./db.json')
-    if (!/./.test(res[0])) {
-      for (let ob of json) {
-        if (Object.keys(ob)[0] === res[0]) console.log(ob[Object.keys(ob)[0]])
-      }
+  dbInput = delSpace(dbInput.slice(4))
+  let res = getKeyValue(dbInput)
+  return showSimpleOrNestedKey(res) ? ['', res[2]] : ['No such key found', res[2]]
+}
+
+function showSimpleOrNestedKey (res) {
+  let json = require('./db.json'), flag
+  flag = (!/./.test(res[0])) ? showSimpleKey(json, res) : showNestedKey(json, res)
+  return flag
+}
+
+function showSimpleKey (json, res) {
+  for (let ob of json) {
+    if (Object.keys(ob)[0] === res[0]) {
+      console.log(ob[Object.keys(ob)[0]])
+      return 1
     }
-    else {
-      let keyArr = res[0].split('.'), obj = ''
-      key = res[0].slice(keyArr[0].length + 1)
-      for (let ob of json) {
-        if (Object.keys(ob)[0] === keyArr[0]) {
-          obj = ob
-        }
-      }
-      for (let i = 0; i < keyArr.length; i++) obj = obj[keyArr[i]]
-      console.log(obj)
-    }
-    return ['', res[2]]
   }
-  return null
+}
+
+function showNestedKey (json, res) {
+  let keyArr = res[0].split('.'), obj = '', flag = 0
+  // let key = res[0].slice(keyArr[0].length + 1)
+  for (let ob of json) {
+    if (Object.keys(ob)[0] === keyArr[0]) {
+      obj = ob
+      flag = 1
+    }
+  }
+  for (let i = 0; i < keyArr.length; i++) obj = obj[keyArr[i]]
+  console.log(obj)
+  return flag
 }
 
 function getKeyValue (dbInput) {
