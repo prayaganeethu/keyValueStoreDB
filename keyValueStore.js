@@ -13,7 +13,7 @@ exports.keyValStore = function (dbInput) {
   return null
 }
 
-let dbOp = factory(listAll, ifInsert, updateObj, deleteObj, showValue)
+let dbOp = factory(ifList, ifInsert, updateObj, deleteObj, showValue)
 
 function factory (...crud) {
   return function (In) {
@@ -25,20 +25,20 @@ function factory (...crud) {
   }
 }
 
-function listAll (dbInput) {
+function ifList (dbInput) {
+  return (dbInput.split(' ')[0] === 'listAll') ? listData(dbInput) : null
+}
+
+function listData (dbInput) {
   let count = 0, msg = ''
-  if (dbInput.split(' ')[0] === 'listAll') {
-    console.log('listAll')
-    dbInput = delSpace(dbInput.slice(7))
-    let json = require('./db.json')
-    for (let ob of json) {
-      console.log(Object.keys(ob)[0], ':', ob[Object.keys(ob)[0]])
-      count++
-    }
-    msg += count + ' Items'
-    return [msg, dbInput]
+  dbInput = delSpace(dbInput.slice(7))
+  let json = require('./db.json')
+  for (let ob of json) {
+    console.log(Object.keys(ob)[0], ':', ob[Object.keys(ob)[0]])
+    count++
   }
-  return null
+  msg += count + ' Items'
+  return [msg, dbInput]
 }
 
 function ifInsert (dbInput) {
