@@ -13,7 +13,7 @@ exports.keyValStore = function (dbInput) {
   return null
 }
 
-let dbOp = factory(ifList, ifInsert, updateObj, deleteObj, showValue)
+let dbOp = factory(ifList, ifInsert, ifUpdate, deleteObj, showValue)
 
 function factory (...crud) {
   return function (In) {
@@ -59,46 +59,58 @@ function insertData (dbInput) {
   else return ['Key already exists', res[2]]
 }
 
-function updateObj (dbInput) {
-  if (dbInput.split(' ')[0] === 'update') {
-    console.log('update')
-    dbInput = delSpace(dbInput.slice(6))
-    let res = getKeyValue(dbInput)
-    let json = require('./db.json'), flag = 0
-    if (!/./.test(res[0])) {
-      for (let ob of json) {
-        if (Object.keys(ob)[0] === res[0]) {
-          ob[res[0]] = res[1][0]
-          flag = 1
-        }
-      }
-    }
-    else {
-      let keyArr = res[0].split('.'), i
-      key = res[0].slice(keyArr[0].length + 1)
-      for (let ob of json) {
-        if ((Object.keys(ob).length === keyArr.length - 1) && (Object.keys(ob)[0] === keyArr[0])) {
-          console.log('HOLA', Object.keys(ob).length, keyArr.length)
-          for (i = 0; i < Object.keys(ob).length - 1; i++) ob = ob[Object.keys(ob)[i]]
-          console.log('ob', ob)
-          ob[keyArr[keyArr.length - 2]][keyArr[keyArr.length - 1]] = value[0]
-          flag = 1
-        }
-        else if ((Object.keys(ob).length === keyArr.length) && (Object.keys(ob)[0] === keyArr[0])) {
-          for (i = 0; i < keyArr.length - 1; i++) ob = ob[keyArr[i]]
-          ob[keyArr[i]] = res[1][0]
-          flag = 1
-        }
-      }
-    }
+function ifUpdate (dbInput) {
+  return (dbInput.split(' ')[0] === 'update') ? updateData(dbInput) : null
+}
 
-    if (flag === 1) {
-      fs.writeFile('db.json', JSON.stringify(json, null, 4))
-      return ['Value updated', res[2]]
+function updateData (dbInput) {
+  dbInput = delSpace(dbInput.slice(6))
+  let res = getKeyValue(dbInput)
+  return (updateSimpleOrNestedKey(res)) ? ['Value updated', res[2]] : ['No such key found', res[2]]
+}
+
+function updateSimpleOrNestedKey (res) {
+  let json = require('./db.json'), flag = 0
+  flag = (!/./.test(res[0])) ? simpleKeyUpdate(json, res) : nestedKeyUpdate(json, res)
+  writeData(json)
+  return flag
+}
+
+function simpleKeyUpdate (json, res) {
+  for (let ob of json) {
+    if (Object.keys(ob)[0] === res[0]) {
+      ob[res[0]] = res[1][0]
+      return 1
     }
-    return ['No such key found', res[2]]
   }
-  return null
+}
+
+function nestedKeyUpdate (json, res) {
+  let keyArr = res[0].split('.'), flag = 0
+  // let key = res[0].slice(keyArr[0].length + 1)
+  for (let ob of json) {
+    if ((Object.keys(ob).length === keyArr.length - 1) && (Object.keys(ob)[0] === keyArr[0])) {
+      flag = insertNewNestedKey(ob, keyArr, res)
+    }
+    else if ((Object.keys(ob).length === keyArr.length) && (Object.keys(ob)[0] === keyArr[0])) {
+      flag = updateOldNestedKey(ob, keyArr, res)
+    }
+  }
+  return flag
+}
+
+function insertNewNestedKey (ob, keyArr, res) {
+  for (let i = 0; i < Object.keys(ob).length - 1; i++) ob = ob[Object.keys(ob)[i]]
+  console.log('ob', ob)
+  ob[keyArr[keyArr.length - 2]][keyArr[keyArr.length - 1]] = res[1][0]
+  return 1
+}
+
+function updateOldNestedKey (ob, keyArr, res) {
+  let i
+  for (i = 0; i < keyArr.length - 1; i++) ob = ob[keyArr[i]]
+  ob[keyArr[i]] = res[1][0]
+  return 1
 }
 
 function deleteObj (dbInput) {
@@ -178,7 +190,7 @@ function getKeyValue (dbInput) {
   let key = dbInput.split(' ')[0], value
   dbInput = delSpace(dbInput.slice(key.length))
   if (dbInput) {
-    value = jsonParser.valueParsers(dbInput.split(' ')[0])
+    value = jsonParser.parseJSON(dbInput.split(' ')[0])
     dbInput = delSpace(dbInput.slice(dbInput.split(' ')[0].length))
   }
   else value = ''

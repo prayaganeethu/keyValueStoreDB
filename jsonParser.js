@@ -1,4 +1,9 @@
-exports.valueParsers = factoryParsers(parseNum, parseString, parseArray, parseObject)
+exports.parseJSON = function (JSONInput) {
+  let value = valueParsers(delSpace(JSONInput))
+  return (value != null) ? value : 'Invalid Json'
+}
+
+let valueParsers = factoryParsers(parseNum, parseString, parseArray, parseObject)
 
 function factoryParsers (...parsers) {
   return function (In) {
