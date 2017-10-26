@@ -27,11 +27,39 @@ exports.insertData = function (dbInput) {
   else {
     let json = require('./db.json')
     if (!keyExists(res[0], json)) {
-      json[res[0]] = res[1][0]
-      fs.writeFile('./db.json', JSON.stringify(json, null, 4))
-      return ['Data inserted', res[2]]
+      return (insertSimpleOrNestedKey(res)) ? ['Data inserted', res[2]] : ['No such key found', res[2]]
+      // json[res[0]] = res[1][0]
+      // fs.writeFile('./db.json', JSON.stringify(json, null, 4))
+      // return ['Data inserted', res[2]]
     }
     else return ['Key already exists', res[2]]
+  }
+}
+
+function insertSimpleOrNestedKey (res) {
+  let json = require('./db.json'), flag = 0, keyArr = res[0].split('.')
+  flag = (!/./.test(res[0])) ? simpleKeyInsert(json, res) : nestedKeyInsert(json, res, keyArr)
+  writeData(json)
+  return flag
+}
+
+function simpleKeyInsert (json, res) {
+  json[res[0]] = res[1][0]
+  fs.writeFile('./db.json', JSON.stringify(json, null, 4))
+  return 1
+}
+
+function nestedKeyInsert (obj, res, keyArr) {
+  console.log(obj, res, keyArr)
+  if (keyArr.length === 2) {
+    let ob = obj[keyArr[0]]
+    ob[keyArr[1]] = res[1][0]
+    obj[keyArr[0]] = ob
+    return 1
+  }
+  if (keyArr[0] in obj && keyArr.length > 2) {
+    console.log('Heyy')
+    return nestedKeyInsert(obj[keyArr[0]], res, keyArr.slice(1))
   }
 }
 
