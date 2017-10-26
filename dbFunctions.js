@@ -148,11 +148,11 @@ function simpleKeyShow (json, res) {
 }
 
 function nestedKeyShow (obj, res, keyArr) {
-  if (keyArr[0] in obj && keyArr.length === 1) {
+  if (keyExists(keyArr[0], obj) && keyArr.length === 1) {
     console.log(obj[keyArr[0]])
     return 1
   }
-  if (keyArr[0] in obj && keyArr.length > 1) {
+  if (keyExists(keyArr[0], obj) && keyArr.length > 1) {
     let flag = nestedKeyShow(obj[keyArr[0]], res, keyArr.slice(1))
     return flag
   }
