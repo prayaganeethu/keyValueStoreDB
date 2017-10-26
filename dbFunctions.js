@@ -13,44 +13,43 @@ exports.listData = function (dbInput) {
 exports.insertData = function (dbInput) {
   dbInput = delSpace(dbInput.slice(6))
   let res = getKeyValue(dbInput)
-  if (!fs.existsSync('./db.json')) {
-    let json = {}
-    fs.open('./db.json', 'w+', (err, fd) => {
-      if (err) throw err
-      else {
-        json[res[0]] = res[1][0]
-        fs.writeFile('./db.json', JSON.stringify(json, null, 4))
-      }
-    })
-    return ['Data inserted', res[2]]
-  }
+  if (!fs.existsSync('./db.json')) return firstInsert(res)
   else {
     let json = require('./db.json')
     if (!keyExists(res[0], json)) {
-      return (insertSimpleOrNestedKey(res)) ? ['Data inserted', res[2]] : ['No such key found', res[2]]
-      // json[res[0]] = res[1][0]
-      // fs.writeFile('./db.json', JSON.stringify(json, null, 4))
-      // return ['Data inserted', res[2]]
+      return (insertSimpleOrNestedKey(res)) ? ['Data inserted', res[2]] : ['Error', res[2]]
     }
     else return ['Key already exists', res[2]]
   }
 }
 
+function firstInsert (res) {
+  let json = {}
+  fs.open('./db.json', 'w+', (err, fd) => {
+    if (err) throw err
+    else {
+      json[res[0]] = res[1][0]
+      fs.writeFile('./db.json', JSON.stringify(json, null, 4))
+    }
+  })
+  return ['Data inserted', res[2]]
+}
+
 function insertSimpleOrNestedKey (res) {
   let json = require('./db.json'), flag = 0, keyArr = res[0].split('.')
-  flag = (!/./.test(res[0])) ? simpleKeyInsert(json, res) : nestedKeyInsert(json, res, keyArr)
+  flag = (keyArr.length === 1) ? simpleKeyInsert(json, res) : nestedKeyInsert(json, res, keyArr)
   writeData(json)
   return flag
 }
 
 function simpleKeyInsert (json, res) {
   json[res[0]] = res[1][0]
-  fs.writeFile('./db.json', JSON.stringify(json, null, 4))
+  writeData(json)
   return 1
 }
 
 function nestedKeyInsert (obj, res, keyArr) {
-  console.log(obj, res, keyArr)
+  console.log('obj, res, keyArr')
   if (keyArr.length === 2) {
     let ob = obj[keyArr[0]]
     ob[keyArr[1]] = res[1][0]
@@ -93,26 +92,6 @@ function nestedKeyUpdate (obj, res, keyArr) {
     console.log('Heyy')
     return nestedKeyUpdate(obj[keyArr[0]], res, keyArr.slice(1))
   }
-}
-
-function insertNewNestedKey (ob, keyArr, res) {
-  let arr = Object.keys(ob)
-  let key = arr.filter((key, index, arr) => { return key === keyArr[keyArr.length - 2] })
-  if (key) {
-    let obj = ob[key[0]]
-    obj[keyArr[keyArr.length - 1]] = res[1][0]
-    ob[key[0]] = obj
-    return 1
-  } else {
-    return 0
-  }
-}
-
-function updateOldNestedKey (ob, keyArr, res) {
-  let i
-  for (i = 0; i < keyArr.length - 1; i++) ob = ob[keyArr[i]]
-  ob[keyArr[i]] = res[1][0]
-  return 1
 }
 
 exports.deleteData = function (dbInput) {
