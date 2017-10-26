@@ -29,7 +29,7 @@ function firstInsert (res) {
     if (err) throw err
     else {
       json[res[0]] = res[1][0]
-      fs.writeFile('./db.json', JSON.stringify(json, null, 4))
+      writeData(json)
     }
   })
   return ['Data inserted', res[2]]
@@ -38,7 +38,6 @@ function firstInsert (res) {
 function insertSimpleOrNestedKey (res) {
   let json = require('./db.json'), flag = 0, keyArr = res[0].split('.')
   flag = (keyArr.length === 1) ? simpleKeyInsert(json, res) : nestedKeyInsert(json, res, keyArr)
-  writeData(json)
   return flag
 }
 
@@ -49,7 +48,6 @@ function simpleKeyInsert (json, res) {
 }
 
 function nestedKeyInsert (obj, res, keyArr) {
-  console.log('obj, res, keyArr')
   if (keyArr.length === 2) {
     let ob = obj[keyArr[0]]
     ob[keyArr[1]] = res[1][0]
@@ -57,8 +55,9 @@ function nestedKeyInsert (obj, res, keyArr) {
     return 1
   }
   if (keyArr[0] in obj && keyArr.length > 2) {
-    console.log('Heyy')
-    return nestedKeyInsert(obj[keyArr[0]], res, keyArr.slice(1))
+    let flag = nestedKeyInsert(obj[keyArr[0]], res, keyArr.slice(1))
+    writeData(obj)
+    return flag
   }
 }
 
@@ -71,13 +70,13 @@ exports.updateData = function (dbInput) {
 function updateSimpleOrNestedKey (res) {
   let json = require('./db.json'), flag = 0, keyArr = res[0].split('.')
   flag = (!/./.test(res[0])) ? simpleKeyUpdate(json, res) : nestedKeyUpdate(json, res, keyArr)
-  writeData(json)
   return flag
 }
 
 function simpleKeyUpdate (json, res) {
   if (res[0] in json) {
     json[res[0]] = res[1][0]
+    writeData(json)
     return 1
   }
   else return 0
@@ -89,8 +88,9 @@ function nestedKeyUpdate (obj, res, keyArr) {
     return 1
   }
   if (keyArr[0] in obj && keyArr.length > 1) {
-    console.log('Heyy')
-    return nestedKeyUpdate(obj[keyArr[0]], res, keyArr.slice(1))
+    let flag = nestedKeyUpdate(obj[keyArr[0]], res, keyArr.slice(1))
+    writeData(obj)
+    return flag
   }
 }
 
@@ -101,53 +101,30 @@ exports.deleteData = function (dbInput) {
 }
 
 function deleteSimpleOrNestedKey (res) {
-  let json = require('./db.json')
-  let flag = (!(/./.test(res[0]))) ? deleteSimpleKey(json, res) : deleteNestedKey(json, res)
+  let json = require('./db.json'), keyArr = res[0].split('.')
+  let flag = (keyArr.length === 1) ? simpleKeyDelete(json, res) : nestedKeyDelete(json, res, keyArr)
   return flag
 }
 
-function deleteSimpleKey (json, res) {
-  let count = 0, flag = 0
-  for (let ob of json) {
-    if (ob === null) {
-      count++
-      continue
-    }
-    if (Object.keys(ob)[0] === res[0]) {
-      delete json[count]
-      flag = 1
-      json = purgeJson(json)
-      writeData(json)
-      break
-    }
-    count++
+function simpleKeyDelete (json, res) {
+  if (res[0] in json) {
+    delete json[res[0]]
+    writeData(json)
+    return 1
   }
-  return flag
+  else return 0
 }
 
-function deleteNestedKey (json, res) {
-  let keyArr = res[0].split('.'), flag = 0
-  // let key = res[0].slice(keyArr[0].length + 1)
-  for (let ob of json) {
-    if (Object.keys(ob)[0] === keyArr[0]) {
-      for (let i = 0; i < keyArr.length; i++) {
-        if (i === keyArr.length - 1) {
-          delete ob[keyArr[i]]
-          flag = 1
-          json = purgeJson(json)
-          writeData(json)
-          break
-        }
-        ob = ob[keyArr[i]]
-      }
-    }
+function nestedKeyDelete (obj, res, keyArr) {
+  if (keyArr[0] in obj && keyArr.length === 1) {
+    delete obj[keyArr[0]]
+    return 1
   }
-  return flag
-}
-
-function purgeJson (json) {
-  for (let i = 0; i < json.length; i++) if (Object.keys(json[i]).length === 0) json.splice(i, 1)
-  return json
+  if (keyArr[0] in obj && keyArr.length > 1) {
+    let flag = nestedKeyDelete(obj[keyArr[0]], res, keyArr.slice(1))
+    writeData(obj)
+    return flag
+  }
 }
 
 exports.showValue = function (dbInput) {
@@ -194,20 +171,6 @@ function getKeyValue (dbInput) {
   }
   else value = ''
   return [key, value, dbInput]
-}
-
-function initializeFile () {
-  // let json = []
-  // fs.open('./db.json', 'w+', (err, fd) => {
-  //   if (err) throw err
-  //   else {
-  //     fs.writeFile('./test.json', JSON.stringify(json, null, 4), function (err) {
-  //       if (err) throw err
-  //       json = require('./db.json')
-  //     })
-  //   }
-  // })
-  return json
 }
 
 function keyExists (key, obj) {
