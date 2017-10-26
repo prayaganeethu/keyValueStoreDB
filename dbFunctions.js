@@ -54,7 +54,7 @@ function nestedKeyInsert (obj, res, keyArr) {
     obj[keyArr[0]] = ob
     return 1
   }
-  if (keyArr[0] in obj && keyArr.length > 2) {
+  if (keyExists(keyArr[0], obj) && keyArr.length > 2) {
     let flag = nestedKeyInsert(obj[keyArr[0]], res, keyArr.slice(1))
     writeData(obj)
     return flag
@@ -83,11 +83,11 @@ function simpleKeyUpdate (json, res) {
 }
 
 function nestedKeyUpdate (obj, res, keyArr) {
-  if (keyArr[0] in obj && keyArr.length === 1) {
+  if (keyExists(keyArr[0], obj) && keyArr.length === 1) {
     obj[keyArr[0]] = res[1][0]
     return 1
   }
-  if (keyArr[0] in obj && keyArr.length > 1) {
+  if (keyExists(keyArr[0], obj) && keyArr.length > 1) {
     let flag = nestedKeyUpdate(obj[keyArr[0]], res, keyArr.slice(1))
     writeData(obj)
     return flag
@@ -116,11 +116,11 @@ function simpleKeyDelete (json, res) {
 }
 
 function nestedKeyDelete (obj, res, keyArr) {
-  if (keyArr[0] in obj && keyArr.length === 1) {
+  if (keyExists(keyArr[0], obj) && keyArr.length === 1) {
     delete obj[keyArr[0]]
     return 1
   }
-  if (keyArr[0] in obj && keyArr.length > 1) {
+  if (keyExists(keyArr[0], obj) && keyArr.length > 1) {
     let flag = nestedKeyDelete(obj[keyArr[0]], res, keyArr.slice(1))
     writeData(obj)
     return flag
