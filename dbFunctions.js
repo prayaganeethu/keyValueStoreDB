@@ -130,36 +130,32 @@ function nestedKeyDelete (obj, res, keyArr) {
 exports.showValue = function (dbInput) {
   dbInput = delSpace(dbInput.slice(4))
   let res = getKeyValue(dbInput)
-  return showSimpleOrNestedKey(res) ? ['', res[2]] : ['No such key found', res[2]]
+  return showSimpleOrNestedKey(res) ? ['Key exists', res[2]] : ['No such key found', res[2]]
 }
 
 function showSimpleOrNestedKey (res) {
-  let json = require('./db.json'), flag
-  flag = (!/./.test(res[0])) ? showSimpleKey(json, res) : showNestedKey(json, res)
+  let json = require('./db.json'), keyArr = res[0].split('.')
+  let flag = (keyArr.length === 1) ? simpleKeyShow(json, res) : nestedKeyShow(json, res, keyArr)
   return flag
 }
 
-function showSimpleKey (json, res) {
-  for (let ob of json) {
-    if (Object.keys(ob)[0] === res[0]) {
-      console.log(ob[Object.keys(ob)[0]])
-      return 1
-    }
+function simpleKeyShow (json, res) {
+  if (res[0] in json) {
+    console.log(json[res[0]])
+    return 1
   }
+  else return 0
 }
 
-function showNestedKey (json, res) {
-  let keyArr = res[0].split('.'), obj = '', flag = 0
-  // let key = res[0].slice(keyArr[0].length + 1)
-  for (let ob of json) {
-    if (Object.keys(ob)[0] === keyArr[0]) {
-      obj = ob
-      flag = 1
-    }
+function nestedKeyShow (obj, res, keyArr) {
+  if (keyArr[0] in obj && keyArr.length === 1) {
+    console.log(obj[keyArr[0]])
+    return 1
   }
-  for (let i = 0; i < keyArr.length; i++) obj = obj[keyArr[i]]
-  console.log(obj)
-  return flag
+  if (keyArr[0] in obj && keyArr.length > 1) {
+    let flag = nestedKeyShow(obj[keyArr[0]], res, keyArr.slice(1))
+    return flag
+  }
 }
 
 function getKeyValue (dbInput) {
