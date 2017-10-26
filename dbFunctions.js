@@ -74,7 +74,7 @@ function updateSimpleOrNestedKey (res) {
 }
 
 function simpleKeyUpdate (json, res) {
-  if (res[0] in json) {
+  if (keyExists(res[0], json)) {
     json[res[0]] = res[1][0]
     writeData(json)
     return 1
@@ -107,7 +107,7 @@ function deleteSimpleOrNestedKey (res) {
 }
 
 function simpleKeyDelete (json, res) {
-  if (res[0] in json) {
+  if (keyExists(res[0], json)) {
     delete json[res[0]]
     writeData(json)
     return 1
@@ -140,7 +140,7 @@ function showSimpleOrNestedKey (res) {
 }
 
 function simpleKeyShow (json, res) {
-  if (res[0] in json) {
+  if (keyExists(res[0], json)) {
     console.log(json[res[0]])
     return 1
   }

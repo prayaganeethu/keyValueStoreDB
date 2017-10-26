@@ -13,7 +13,6 @@ exports.keyValStore = function (dbInput) {
 }
 
 let dbOp = factory(ifList, ifInsert, ifUpdate, ifDelete, ifShowSpecificKey)
-// let dbOp = factory(ifList, ifInsert, ifUpdate, ifDelete, ifShowSpecificKey)
 
 function factory (...crud) {
   return function (In) {
