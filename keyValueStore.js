@@ -12,15 +12,13 @@ exports.keyValStore = function (dbInput) {
   return null
 }
 
-let dbOp = factory(ifList, ifInsert, ifUpdate, ifDelete, ifShowSpecificKey)
+let dbOp = factory(ifList, ifInsert, ifUpdate)
+// let dbOp = factory(ifList, ifInsert, ifUpdate, ifDelete, ifShowSpecificKey)
 
 function factory (...crud) {
   return function (In) {
-    for (let i = 0; i < crud.length; i++) {
-      let result = crud[i](In)
-      if (result != null) return result
-    }
-    return null
+    let results = crud.map((op, index, crud) => { return op(In) })
+    return results.filter((result) => { return result !== null })[0]
   }
 }
 

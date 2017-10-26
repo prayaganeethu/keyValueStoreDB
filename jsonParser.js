@@ -7,11 +7,8 @@ let valueParsers = factoryParsers(parseNum, parseString, parseArray, parseObject
 
 function factoryParsers (...parsers) {
   return function (In) {
-    for (let i = 0; i < parsers.length; i++) {
-      let result = parsers[i](In)
-      if (result != null) return result
-    }
-    return null
+    let results = parsers.map((result, index, parsers) => { return result(In) })
+    return results.filter((result) => { return result !== null })[0]
   }
 }
 
