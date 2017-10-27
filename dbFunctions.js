@@ -1,9 +1,10 @@
-let jsonParser = require('./jsonParser.js')
 let fs = require('fs')
+let jsonParser = require('./jsonParser.js')
+const db = './db.json'
 
 exports.listData = function (dbInput) {
-  dbInput = delSpace(dbInput.slice(7))
-  let json = require('./db.json')
+  dbInput = jsonParser.delSpace(dbInput.slice(7))
+  let json = require(db)
   for (let ob in json) {
     console.log(ob, ':', json[ob])
   }
@@ -11,21 +12,20 @@ exports.listData = function (dbInput) {
 }
 
 exports.insertData = function (dbInput) {
-  dbInput = delSpace(dbInput.slice(6))
+  dbInput = jsonParser.delSpace(dbInput.slice(6))
   let res = getKeyValue(dbInput)
-  if (!fs.existsSync('./db.json')) return firstInsert(res)
+  if (!fs.existsSync(db)) return firstInsert(res)
   else {
-    let json = require('./db.json')
+    let json = require(db)
     if (!keyExists(res[0], json)) {
       return (insertSimpleOrNestedKey(res)) ? ['Data inserted', res[2]] : ['Error', res[2]]
-    }
-    else return ['Key already exists', res[2]]
+    } else return ['Key already exists', res[2]]
   }
 }
 
 function firstInsert (res) {
   let json = {}
-  fs.open('./db.json', 'w+', (err, fd) => {
+  fs.open(db, 'w+', (err, fd) => {
     if (err) throw err
     else {
       json[res[0]] = res[1][0]
@@ -36,7 +36,7 @@ function firstInsert (res) {
 }
 
 function insertSimpleOrNestedKey (res) {
-  let json = require('./db.json'), flag = 0, keyArr = res[0].split('.')
+  let json = require(db), flag, keyArr = res[0].split('.')
   flag = (keyArr.length === 1) ? simpleKeyInsert(json, res) : nestedKeyInsert(json, res, keyArr)
   return flag
 }
@@ -44,7 +44,7 @@ function insertSimpleOrNestedKey (res) {
 function simpleKeyInsert (json, res) {
   json[res[0]] = res[1][0]
   writeData(json)
-  return 1
+  return true
 }
 
 function nestedKeyInsert (obj, res, keyArr) {
@@ -52,7 +52,7 @@ function nestedKeyInsert (obj, res, keyArr) {
     let ob = obj[keyArr[0]]
     ob[keyArr[1]] = res[1][0]
     obj[keyArr[0]] = ob
-    return 1
+    return true
   }
   if (keyExists(keyArr[0], obj) && keyArr.length > 2) {
     let flag = nestedKeyInsert(obj[keyArr[0]], res, keyArr.slice(1))
@@ -62,79 +62,81 @@ function nestedKeyInsert (obj, res, keyArr) {
 }
 
 exports.updateData = function (dbInput) {
-  dbInput = delSpace(dbInput.slice(6))
+  dbInput = jsonParser.delSpace(dbInput.slice(6))
   let res = getKeyValue(dbInput)
   return (updateSimpleOrNestedKey(res)) ? ['Value updated', res[2]] : ['No such key found', res[2]]
 }
 
 function updateSimpleOrNestedKey (res) {
-  let json = require('./db.json'), flag = 0, keyArr = res[0].split('.')
+  let json = require(db), flag, keyArr = res[0].split('.')
   flag = (!/./.test(res[0])) ? simpleKeyUpdate(json, res) : nestedKeyUpdate(json, res, keyArr)
   return flag
 }
 
 function simpleKeyUpdate (json, res) {
-  if (keyExists(res[0], json)) {
+  if (!keyExists(res[0], json)) return false
+  else {
     json[res[0]] = res[1][0]
     writeData(json)
-    return 1
+    return true
   }
-  else return 0
 }
 
 function nestedKeyUpdate (obj, res, keyArr) {
-  if (keyExists(keyArr[0], obj) && keyArr.length === 1) {
-    obj[keyArr[0]] = res[1][0]
-    return 1
-  }
-  if (keyExists(keyArr[0], obj) && keyArr.length > 1) {
-    let flag = nestedKeyUpdate(obj[keyArr[0]], res, keyArr.slice(1))
-    writeData(obj)
-    return flag
-  }
+  if (keyExists(keyArr[0], obj)) {
+    if (keyArr.length === 1) {
+      obj[keyArr[0]] = res[1][0]
+      return true
+    } else if (keyArr.length > 1) {
+      let flag = nestedKeyUpdate(obj[keyArr[0]], res, keyArr.slice(1))
+      writeData(obj)
+      return flag
+    }
+  } else return false
 }
 
 exports.deleteData = function (dbInput) {
-  dbInput = delSpace(dbInput.slice(6))
+  dbInput = jsonParser.delSpace(dbInput.slice(6))
   let res = getKeyValue(dbInput)
   return (deleteSimpleOrNestedKey(res)) ? ['Data deleted', res[2]] : ['No such key found', res[2]]
 }
 
 function deleteSimpleOrNestedKey (res) {
-  let json = require('./db.json'), keyArr = res[0].split('.')
+  let json = require(db), keyArr = res[0].split('.')
   let flag = (keyArr.length === 1) ? simpleKeyDelete(json, res) : nestedKeyDelete(json, res, keyArr)
   return flag
 }
 
 function simpleKeyDelete (json, res) {
-  if (keyExists(res[0], json)) {
+  if (!keyExists(res[0], json)) return false
+  else {
     delete json[res[0]]
     writeData(json)
-    return 1
+    return true
   }
-  else return 0
 }
 
 function nestedKeyDelete (obj, res, keyArr) {
-  if (keyExists(keyArr[0], obj) && keyArr.length === 1) {
-    delete obj[keyArr[0]]
-    return 1
-  }
-  if (keyExists(keyArr[0], obj) && keyArr.length > 1) {
-    let flag = nestedKeyDelete(obj[keyArr[0]], res, keyArr.slice(1))
-    writeData(obj)
-    return flag
-  }
+  if (keyExists(keyArr[0], obj)) {
+    if (keyArr.length === 1) {
+      delete obj[keyArr[0]]
+      return true
+    } else if (keyArr.length > 1) {
+      let flag = nestedKeyDelete(obj[keyArr[0]], res, keyArr.slice(1))
+      writeData(obj)
+      return flag
+    }
+  } else return false
 }
 
 exports.showValue = function (dbInput) {
-  dbInput = delSpace(dbInput.slice(4))
+  dbInput = jsonParser.delSpace(dbInput.slice(4))
   let res = getKeyValue(dbInput)
   return showSimpleOrNestedKey(res) ? ['Key exists', res[2]] : ['No such key found', res[2]]
 }
 
 function showSimpleOrNestedKey (res) {
-  let json = require('./db.json'), keyArr = res[0].split('.')
+  let json = require(db), keyArr = res[0].split('.')
   let flag = (keyArr.length === 1) ? simpleKeyShow(json, res) : nestedKeyShow(json, res, keyArr)
   return flag
 }
@@ -142,30 +144,29 @@ function showSimpleOrNestedKey (res) {
 function simpleKeyShow (json, res) {
   if (keyExists(res[0], json)) {
     console.log(json[res[0]])
-    return 1
-  }
-  else return 0
+    return true
+  } else return false
 }
 
 function nestedKeyShow (obj, res, keyArr) {
-  if (keyExists(keyArr[0], obj) && keyArr.length === 1) {
-    console.log(obj[keyArr[0]])
-    return 1
-  }
-  if (keyExists(keyArr[0], obj) && keyArr.length > 1) {
-    let flag = nestedKeyShow(obj[keyArr[0]], res, keyArr.slice(1))
-    return flag
-  }
+  if (keyExists(keyArr[0], obj)) {
+    if (keyArr.length === 1) {
+      console.log(obj[keyArr[0]])
+      return true
+    } else if (keyArr.length > 1) {
+      let flag = nestedKeyShow(obj[keyArr[0]], res, keyArr.slice(1))
+      return flag
+    }
+  } else return false
 }
 
 function getKeyValue (dbInput) {
   let key = dbInput.split(' ')[0], value
-  dbInput = delSpace(dbInput.slice(key.length))
+  dbInput = jsonParser.delSpace(dbInput.slice(key.length))
   if (dbInput) {
     value = jsonParser.parseJSON(dbInput.split(' ')[0])
-    dbInput = delSpace(dbInput.slice(dbInput.split(' ')[0].length))
-  }
-  else value = ''
+    dbInput = jsonParser.delSpace(dbInput.slice(dbInput.split(' ')[0].length))
+  } else value = ''
   return [key, value, dbInput]
 }
 
@@ -177,9 +178,4 @@ function writeData (json) {
   fs.writeFile('db.json', JSON.stringify(json, null, 4), function (err) {
     if (err) throw err
   })
-}
-
-function delSpace (dbInput) {
-  while (/\s/.test(dbInput[0])) dbInput = dbInput.slice(1)
-  return dbInput
 }

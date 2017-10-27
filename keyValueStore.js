@@ -1,10 +1,11 @@
 let dbFunctions = require('./dbFunctions.js')
+let jsonParser = require('./jsonParser.js')
 
 exports.keyValStore = function (dbInput) {
   if (dbInput) {
     let res
-    while (delSpace(dbInput)) {
-      res = dbOp(delSpace(dbInput))
+    while (dbInput) {
+      res = dbOp(jsonParser.delSpace(dbInput))
       dbInput = res[1]
     }
     return res[0]
@@ -39,9 +40,4 @@ function ifDelete (dbInput) {
 
 function ifShowSpecificKey (dbInput) {
   return (dbInput.split(' ')[0] === 'show') ? dbFunctions.showValue(dbInput) : null
-}
-
-function delSpace (dbInput) {
-  while (/\s/.test(dbInput[0])) dbInput = dbInput.slice(1)
-  return dbInput
 }

@@ -1,5 +1,5 @@
 exports.parseJSON = function (JSONInput) {
-  let value = valueParsers(delSpace(JSONInput))
+  let value = valueParsers(deleteSpace(JSONInput))
   return (value != null) ? value : 'Invalid Json'
 }
 
@@ -22,14 +22,14 @@ function parseNum (value) {
 function parseArray (value) {
   if (value[0] !== '[') return null
   value = value.slice(1)
-  value = delSpace(value)
+  value = deleteSpace(value)
   let arr = [], val
   while (value[0] !== ']') {
-    val = valueParsers(delSpace(value))
+    val = valueParsers(deleteSpace(value))
     if (val == null) return null
     arr.push(val[0])
     value = (parseComma(val[1]) != null) ? parseComma(val[1]) : val[1]
-    value = delSpace(value)
+    value = deleteSpace(value)
   }
   return [arr, value.slice(1)]
 }
@@ -38,18 +38,18 @@ function parseObject (value) {
   if (value[0] !== '{') return null
   let obj = {}, strng, val, val1, val2
   value = value.slice(1)
-  value = delSpace(value)
+  value = deleteSpace(value)
   while (value[0] !== '}') {
-    val1 = parseString(delSpace(value))
+    val1 = parseString(deleteSpace(value))
     if (val1 === null) return null
     strng = val1[0]
     value = (parseColon(val1[1]) != null) ? parseColon(val1[1]) : val1[1]
-    val2 = valueParsers(delSpace(value))
+    val2 = valueParsers(deleteSpace(value))
     if (val2 == null) return null
     val = val2[0]
     obj[strng] = val
     val = (parseComma(val2[1]) != null) ? parseComma(val2[1]) : val2[1]
-    value = delSpace(val)
+    value = deleteSpace(val)
   }
   return [obj, value.slice(1)]
 }
@@ -66,16 +66,18 @@ function parseString (value) {
 }
 
 function parseComma (value) {
-  value = delSpace(value)
+  value = deleteSpace(value)
   return (value[0] === ',') ? value.slice(1) : null
 }
 
 function parseColon (value) {
-  value = delSpace(value)
+  value = deleteSpace(value)
   return (value[0] === ':') ? value.slice(1) : null
 }
 
-function delSpace (dbInput) {
+exports.delSpace = deleteSpace
+
+function deleteSpace (dbInput) {
   while (/\s/.test(dbInput[0])) dbInput = dbInput.slice(1)
   return dbInput
 }

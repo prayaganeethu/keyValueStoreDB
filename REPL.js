@@ -1,6 +1,5 @@
-let kvs = require('./keyValueStore.js')
-
 const readline = require('readline')
+let kvs = require('./keyValueStore.js')
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -13,7 +12,7 @@ let recursiveAsyncReadLine = function () {
       return rl.close()
     }
     answer = kvs.keyValStore(answer)
-    console.log(`${JSON.stringify(answer)}`)
+    console.log(JSON.stringify(answer, null, 4))
     recursiveAsyncReadLine()
   })
 }
