@@ -164,8 +164,8 @@ function getKeyValue (dbInput) {
   let key = dbInput.split(' ')[0], value
   dbInput = jsonParser.delSpace(dbInput.slice(key.length))
   if (dbInput) {
-    value = jsonParser.parseJSON(dbInput.split(' ')[0])
-    dbInput = jsonParser.delSpace(dbInput.slice(dbInput.split(' ')[0].length))
+    value = jsonParser.parseJSON(dbInput)
+    dbInput = value[1]
   } else value = ''
   return [key, value, dbInput]
 }
