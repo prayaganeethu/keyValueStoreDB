@@ -119,7 +119,8 @@ function simpleKeyDelete (json, res) {
 function nestedKeyDelete (obj, res, keyArr) {
   if (keyExists(keyArr[0], obj)) {
     if (keyArr.length === 1) {
-      delete obj[keyArr[0]]
+      if (obj.length) obj.splice(keyArr[0], 1)
+      else delete obj[keyArr[0]]
       return true
     } else if (keyArr.length > 1) {
       let flag = nestedKeyDelete(obj[keyArr[0]], res, keyArr.slice(1))
