@@ -50,9 +50,12 @@ function simpleKeyInsert (json, res) {
 function nestedKeyInsert (obj, res, keyArr) {
   if (keyArr.length === 2) {
     let ob = obj[keyArr[0]]
-    ob[keyArr[1]] = res[1][0]
-    obj[keyArr[0]] = ob
-    return true
+    if (!keyExists(keyArr[1], ob)) {
+      ob[keyArr[1]] = res[1][0]
+      obj[keyArr[0]] = ob
+      writeData(obj)
+      return true
+    } else return false
   }
   if (keyExists(keyArr[0], obj) && keyArr.length > 2) {
     let flag = nestedKeyInsert(obj[keyArr[0]], res, keyArr.slice(1))
