@@ -18,8 +18,8 @@ exports.insertData = function (dbInput) {
   else {
     let json = require(db)
     if (!keyExists(res[0], json)) {
-      return (insertSimpleOrNestedKey(res)) ? ['Data inserted', res[2]] : ['Error', res[2]]
-    } else return ['Key already exists', res[2]]
+      return (insertSimpleOrNestedKey(res)) ? ['Data inserted', res[1][0]] : ['Key already exists', res[1][0]]
+    } else return ['Key already exists', res[1][0]]
   }
 }
 
@@ -32,7 +32,7 @@ function firstInsert (res) {
       writeData(json)
     }
   })
-  return ['Data inserted', res[2]]
+  return ['Data inserted', res[1][0]]
 }
 
 function insertSimpleOrNestedKey (res) {
@@ -48,28 +48,33 @@ function simpleKeyInsert (json, res) {
 }
 
 function nestedKeyInsert (obj, res, keyArr) {
-  if (keyArr.length === 2) {
-    let ob = obj[keyArr[0]]
-    ob[keyArr[1]] = res[1][0]
-    obj[keyArr[0]] = ob
-    return true
-  }
-  if (keyExists(keyArr[0], obj) && keyArr.length > 2) {
-    let flag = nestedKeyInsert(obj[keyArr[0]], res, keyArr.slice(1))
-    writeData(obj)
-    return flag
-  }
+  if (keyExists(keyArr[0], obj)) {
+    if (!keyExists(keyArr[1], obj[keyArr[0]])) {
+      let ob = obj[keyArr[0]]
+      if (ob.length >= 0) {
+        keyArr[1] = ob.length
+      }
+      ob[keyArr[1]] = res[1][0]
+      obj[keyArr[0]] = ob
+      writeData(obj)
+      return true
+    } else {
+      let flag = nestedKeyInsert(obj[keyArr[0]], res, keyArr.slice(1))
+      writeData(obj)
+      return flag
+    }
+  } else return false
 }
 
 exports.updateData = function (dbInput) {
   dbInput = jsonParser.delSpace(dbInput.slice(6))
   let res = getKeyValue(dbInput)
-  return (updateSimpleOrNestedKey(res)) ? ['Value updated', res[2]] : ['No such key found', res[2]]
+  return (updateSimpleOrNestedKey(res)) ? ['Value updated', res[1][0]] : ['No such key found', res[1][0]]
 }
 
 function updateSimpleOrNestedKey (res) {
   let json = require(db), flag, keyArr = res[0].split('.')
-  flag = (!/./.test(res[0])) ? simpleKeyUpdate(json, res) : nestedKeyUpdate(json, res, keyArr)
+  flag = (keyArr.length === 1) ? simpleKeyUpdate(json, res) : nestedKeyUpdate(json, res, keyArr)
   return flag
 }
 
@@ -89,6 +94,7 @@ function nestedKeyUpdate (obj, res, keyArr) {
       return true
     } else if (keyArr.length > 1) {
       let flag = nestedKeyUpdate(obj[keyArr[0]], res, keyArr.slice(1))
+      console.log(obj)
       writeData(obj)
       return flag
     }
@@ -98,7 +104,7 @@ function nestedKeyUpdate (obj, res, keyArr) {
 exports.deleteData = function (dbInput) {
   dbInput = jsonParser.delSpace(dbInput.slice(6))
   let res = getKeyValue(dbInput)
-  return (deleteSimpleOrNestedKey(res)) ? ['Data deleted', res[2]] : ['No such key found', res[2]]
+  return (deleteSimpleOrNestedKey(res)) ? ['Data deleted', res[1][0]] : ['No such key found', res[1][0]]
 }
 
 function deleteSimpleOrNestedKey (res) {
@@ -119,7 +125,8 @@ function simpleKeyDelete (json, res) {
 function nestedKeyDelete (obj, res, keyArr) {
   if (keyExists(keyArr[0], obj)) {
     if (keyArr.length === 1) {
-      delete obj[keyArr[0]]
+      if (obj.length) obj.splice(keyArr[0], 1)
+      else delete obj[keyArr[0]]
       return true
     } else if (keyArr.length > 1) {
       let flag = nestedKeyDelete(obj[keyArr[0]], res, keyArr.slice(1))
@@ -132,7 +139,7 @@ function nestedKeyDelete (obj, res, keyArr) {
 exports.showValue = function (dbInput) {
   dbInput = jsonParser.delSpace(dbInput.slice(4))
   let res = getKeyValue(dbInput)
-  return showSimpleOrNestedKey(res) ? ['Key exists', res[2]] : ['No such key found', res[2]]
+  return showSimpleOrNestedKey(res) ? ['Key exists', res[1][0]] : ['No such key found', res[1][0]]
 }
 
 function showSimpleOrNestedKey (res) {
@@ -164,10 +171,11 @@ function getKeyValue (dbInput) {
   let key = dbInput.split(' ')[0], value
   dbInput = jsonParser.delSpace(dbInput.slice(key.length))
   if (dbInput) {
-    value = jsonParser.parseJSON(dbInput.split(' ')[0])
-    dbInput = jsonParser.delSpace(dbInput.slice(dbInput.split(' ')[0].length))
+    value = jsonParser.parseJSON(dbInput)
+    console.log('getKeyValue', value)
+    dbInput = value[1]
   } else value = ''
-  return [key, value, dbInput]
+  return [key, value]
 }
 
 function keyExists (key, obj) {
