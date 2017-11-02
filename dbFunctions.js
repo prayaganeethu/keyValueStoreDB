@@ -4,11 +4,14 @@ const db = './db.json'
 
 exports.listData = function (dbInput) {
   dbInput = jsonParser.delSpace(dbInput.slice(7))
-  let json = require(db)
-  for (let ob in json) {
-    console.log(ob, ':', json[ob])
+  if (!fs.existsSync(db)) return 'Please insert atleast once before listing'
+  else {
+    let json = require(db)
+    for (let ob in json) {
+      console.log(ob, ':', json[ob])
+    }
+    return [Object.keys(json).length + ' Items', dbInput]
   }
-  return [Object.keys(json).length + ' Items', dbInput]
 }
 
 exports.insertData = function (dbInput) {

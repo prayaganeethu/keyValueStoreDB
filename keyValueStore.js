@@ -1,6 +1,6 @@
 let dbFunctions = require('./dbFunctions.js')
 let jsonParser = require('./jsonParser.js')
-let errors = ['Invalid Json', 'Invalid Command', 'Please enter a key', 'Please enter a value']
+let errors = ['Invalid Json', 'Invalid Command', 'Please enter a key', 'Please enter a value', 'Please insert atleast once before listing']
 
 exports.keyValStore = function (dbInput) {
   if (dbInput) {
