@@ -82,7 +82,7 @@ exports.updateData = function (dbInput) {
 
 function updateSimpleOrNestedKey (res) {
   let json = require(db), flag, keyArr = res[0].split('.')
-  flag = (!/./.test(res[0])) ? simpleKeyUpdate(json, res) : nestedKeyUpdate(json, res, keyArr)
+  flag = (keyArr.length === 1) ? simpleKeyUpdate(json, res) : nestedKeyUpdate(json, res, keyArr)
   return flag
 }
 
