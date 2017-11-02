@@ -14,7 +14,7 @@ exports.listData = function (dbInput) {
 exports.insertData = function (dbInput) {
   dbInput = jsonParser.delSpace(dbInput.slice(6))
   let res = getKeyValue(dbInput)
-  if (res !== 'Invalid Json') {
+  if (res !== 'Invalid Json' && res[1] !== '' && res[0] !== '') {
     if (!fs.existsSync(db)) return firstInsert(res)
     else {
       let json = require(db)
@@ -22,7 +22,7 @@ exports.insertData = function (dbInput) {
         return (insertSimpleOrNestedKey(res)) ? ['Data inserted', res[2]] : ['Error', res[2]]
       } else return ['Key already exists', res[2]]
     }
-  } else return res
+  } else return (res === 'Invalid Json') ? res : ((res[0] === '') ? 'Please enter a key' : 'Please enter a value')
 }
 
 function firstInsert (res) {
@@ -69,8 +69,9 @@ function nestedKeyInsert (obj, res, keyArr) {
 exports.updateData = function (dbInput) {
   dbInput = jsonParser.delSpace(dbInput.slice(6))
   let res = getKeyValue(dbInput)
-  if (res !== 'Invalid Json') return (updateSimpleOrNestedKey(res)) ? ['Value updated', res[2]] : ['No such key found', res[2]]
-  else return res
+  console.log(res)
+  if (res !== 'Invalid Json' && res[0] !== '' && res[1] !== '') return (updateSimpleOrNestedKey(res)) ? ['Value updated', res[2]] : ['No such key found', res[2]]
+  else return (res === 'Invalid Json') ? res : ((res[0] === '') ? 'Please enter a key' : 'Please enter a value')
 }
 
 function updateSimpleOrNestedKey (res) {
@@ -104,7 +105,8 @@ function nestedKeyUpdate (obj, res, keyArr) {
 exports.deleteData = function (dbInput) {
   dbInput = jsonParser.delSpace(dbInput.slice(6))
   let res = getKeyValue(dbInput)
-  return (deleteSimpleOrNestedKey(res)) ? ['Data deleted', res[2]] : ['No such key found', res[2]]
+  if (res[0] !== '') return (deleteSimpleOrNestedKey(res)) ? ['Data deleted', res[2]] : ['No such key found', res[2]]
+  else return 'Please enter a key'
 }
 
 function deleteSimpleOrNestedKey (res) {
@@ -139,7 +141,8 @@ function nestedKeyDelete (obj, res, keyArr) {
 exports.showValue = function (dbInput) {
   dbInput = jsonParser.delSpace(dbInput.slice(4))
   let res = getKeyValue(dbInput)
-  return showSimpleOrNestedKey(res) ? ['Key exists', res[2]] : ['No such key found', res[2]]
+  if (res[0] !== '') return showSimpleOrNestedKey(res) ? ['Key exists', res[2]] : ['No such key found', res[2]]
+  else return 'Please enter a key'
 }
 
 function showSimpleOrNestedKey (res) {

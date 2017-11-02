@@ -1,13 +1,15 @@
 let dbFunctions = require('./dbFunctions.js')
 let jsonParser = require('./jsonParser.js')
+let errors = ['Invalid Json', 'Invalid Command', 'Please enter a key', 'Please enter a value']
 
 exports.keyValStore = function (dbInput) {
   if (dbInput) {
     let res
     while (dbInput) {
       res = dbOp(jsonParser.delSpace(dbInput))
-      if (res !== 'Invalid Json' && res !== 'Invalid Command') dbInput = res[1]
-      else return res
+      if (errors.includes(res)) {
+        return res
+      } else dbInput = res[1]
     }
     return res[0]
   }
@@ -21,7 +23,7 @@ function factory (...crud) {
     let results = crud.map((op, index, crud) => { return op(In) })
     let val = results.filter((result) => { return result !== null })[0]
     if (val) return val
-    else return 'Invalid Command'
+    else return errors[1]
   }
 }
 
