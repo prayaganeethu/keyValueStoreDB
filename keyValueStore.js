@@ -6,7 +6,8 @@ exports.keyValStore = function (dbInput) {
     let res
     while (dbInput) {
       res = dbOp(jsonParser.delSpace(dbInput))
-      dbInput = res[1]
+      if (res !== 'Invalid Json' && res !== 'Invalid Command') dbInput = res[1]
+      else return res
     }
     return res[0]
   }
@@ -18,7 +19,9 @@ let dbOp = factory(ifList, ifInsert, ifUpdate, ifDelete, ifShowSpecificKey)
 function factory (...crud) {
   return function (In) {
     let results = crud.map((op, index, crud) => { return op(In) })
-    return results.filter((result) => { return result !== null })[0]
+    let val = results.filter((result) => { return result !== null })[0]
+    if (val) return val
+    else return 'Invalid Command'
   }
 }
 

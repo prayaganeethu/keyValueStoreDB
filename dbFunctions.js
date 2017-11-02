@@ -14,13 +14,15 @@ exports.listData = function (dbInput) {
 exports.insertData = function (dbInput) {
   dbInput = jsonParser.delSpace(dbInput.slice(6))
   let res = getKeyValue(dbInput)
-  if (!fs.existsSync(db)) return firstInsert(res)
-  else {
-    let json = require(db)
-    if (!keyExists(res[0], json)) {
-      return (insertSimpleOrNestedKey(res)) ? ['Data inserted', res[2]] : ['Error', res[2]]
-    } else return ['Key already exists', res[2]]
-  }
+  if (res !== 'Invalid Json') {
+    if (!fs.existsSync(db)) return firstInsert(res)
+    else {
+      let json = require(db)
+      if (!keyExists(res[0], json)) {
+        return (insertSimpleOrNestedKey(res)) ? ['Data inserted', res[2]] : ['Error', res[2]]
+      } else return ['Key already exists', res[2]]
+    }
+  } else return res
 }
 
 function firstInsert (res) {
@@ -67,7 +69,8 @@ function nestedKeyInsert (obj, res, keyArr) {
 exports.updateData = function (dbInput) {
   dbInput = jsonParser.delSpace(dbInput.slice(6))
   let res = getKeyValue(dbInput)
-  return (updateSimpleOrNestedKey(res)) ? ['Value updated', res[2]] : ['No such key found', res[2]]
+  if (res !== 'Invalid Json') return (updateSimpleOrNestedKey(res)) ? ['Value updated', res[2]] : ['No such key found', res[2]]
+  else return res
 }
 
 function updateSimpleOrNestedKey (res) {
@@ -169,7 +172,9 @@ function getKeyValue (dbInput) {
   dbInput = jsonParser.delSpace(dbInput.slice(key.length))
   if (dbInput) {
     value = jsonParser.parseJSON(dbInput)
-    dbInput = value[1]
+    if (value !== 'Invalid Json') {
+      dbInput = value[1]
+    } else return value
   } else value = ''
   return [key, value, dbInput]
 }
