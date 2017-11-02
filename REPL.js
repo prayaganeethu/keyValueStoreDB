@@ -1,5 +1,5 @@
 const readline = require('readline')
-let kvs = require('./keyValueStore.js')
+const kvs = require('./lib/keyValueStore.js')
 
 const rl = readline.createInterface({
   input: process.stdin,
