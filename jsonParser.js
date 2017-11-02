@@ -3,13 +3,21 @@ exports.parseJSON = function (JSONInput) {
   return (value != null) ? value : 'Invalid Json'
 }
 
-let valueParsers = factoryParsers(parseNum, parseString, parseArray, parseObject)
+let valueParsers = factoryParsers(parseNull, parseBoolean, parseNum, parseString, parseArray, parseObject)
 
 function factoryParsers (...parsers) {
   return function (In) {
     let results = parsers.map((result, index, parsers) => { return result(In) })
     return results.filter((result) => { return result !== null })[0]
   }
+}
+
+function parseNull (JSONInput) {
+  return (JSONInput.slice(0, 4) === 'null') ? [null, JSONInput.slice(4)] : null
+}
+
+function parseBoolean (JSONInput) {
+  return (JSONInput.slice(0, 4) === 'true') ? [true, JSONInput.slice(4)] : ((JSONInput.slice(0, 5) === 'false') ? [false, JSONInput.slice(5)] : null)
 }
 
 function parseNum (value) {
