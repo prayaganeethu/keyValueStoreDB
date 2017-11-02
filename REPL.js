@@ -12,8 +12,8 @@ let recursiveAsyncReadLine = function () {
       return rl.close()
     }
     answer = kvs.keyValStore(answer)
-    console.log(JSON.stringify(answer, null, 4))
-    recursiveAsyncReadLine()
+    rl.write(JSON.stringify(answer, null, 4))
+    setTimeout(recursiveAsyncReadLine, 4000)
   })
 }
 
