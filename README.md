@@ -27,8 +27,6 @@ delete key1[.[key2].~~.[keyN]]
 listAll
 ```
 
-(Shows the count of key value pairs in the DB as well)
-
 **Show a specific key value:**
 
 ```
