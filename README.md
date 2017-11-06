@@ -1,8 +1,12 @@
 # GeekDB
 
-GeekDB is a key value store database.
-Run REPL.js to start with the DB.
-Used my own json parser (jsonParser.js).
+GeekDB is a key value store database. Used my own json parser (jsonParser.js).
+
+To start with the DB:
+```
+node REPL.js
+```
+
 Supports the below mentioned operations.
 
 ## Commands:
