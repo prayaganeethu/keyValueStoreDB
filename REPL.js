@@ -8,12 +8,17 @@ const rl = readline.createInterface({
 
 let recursiveAsyncReadLine = function () {
   rl.question('GeekDB > ', function (answer) {
-    if (answer === 'exit') {
-      return rl.close()
+    if (!answer) {
+      console.log('Enter a command')
+      recursiveAsyncReadLine()
+    } else {
+      if (answer === 'exit') {
+        return rl.close()
+      }
+      answer = kvs.keyValStore(answer)
+      console.log(JSON.stringify(answer, null, 4))
+      recursiveAsyncReadLine()
     }
-    answer = kvs.keyValStore(answer)
-    console.log(JSON.stringify(answer, null, 4))
-    recursiveAsyncReadLine()
   })
 }
 
